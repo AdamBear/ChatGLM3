@@ -13,9 +13,13 @@ from conversation import Conversation
 
 TOOL_PROMPT = 'Answer the following questions as best as you can. You have access to the following tools:'
 
-MODEL_PATH = os.environ.get('MODEL_PATH', 'THUDM/chatglm3-6b')
+#MODEL_PATH = os.environ.get('MODEL_PATH', 'THUDM/chatglm3-6b')
+# PT_PATH = os.environ.get('PT_PATH', None)
+# TOKENIZER_PATH = os.environ.get("TOKENIZER_PATH", MODEL_PATH)
 PT_PATH = os.environ.get('PT_PATH', None)
-TOKENIZER_PATH = os.environ.get("TOKENIZER_PATH", MODEL_PATH)
+TOKENIZER_PATH = "d:\\models\\chatglm3-6b-int4"
+MODEL_PATH = "d:\\models\\chatglm3-6b-int4"
+
 
 @st.cache_resource
 def get_client() -> Client:

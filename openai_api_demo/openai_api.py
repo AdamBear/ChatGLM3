@@ -230,7 +230,7 @@ async def predict(model_id: str, params: dict):
 
 if __name__ == "__main__":
 
-    model_path = "THUDM/chatglm3-6b"
+    model_path = "/data/chatglm3-6b"
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True).cuda()
 
@@ -239,4 +239,4 @@ if __name__ == "__main__":
     # model = load_model_on_gpus("THUDM/chatglm3-6b", num_gpus=2)
     model = model.eval()
 
-    uvicorn.run(app, host='0.0.0.0', port=8000, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=6006, workers=1)
