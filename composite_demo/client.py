@@ -17,8 +17,9 @@ TOOL_PROMPT = 'Answer the following questions as best as you can. You have acces
 # PT_PATH = os.environ.get('PT_PATH', None)
 # TOKENIZER_PATH = os.environ.get("TOKENIZER_PATH", MODEL_PATH)
 PT_PATH = os.environ.get('PT_PATH', None)
-TOKENIZER_PATH = "d:\\models\\chatglm3-6b-int4"
-MODEL_PATH = "d:\\models\\chatglm3-6b-int4"
+TOKENIZER_PATH = "/data/chatglm3"
+MODEL_PATH = "/data/chatglm3"
+
 
 
 

@@ -239,4 +239,4 @@ if __name__ == "__main__":
     # model = load_model_on_gpus("THUDM/chatglm3-6b", num_gpus=2)
     model = model.eval()
 
-    uvicorn.run(app, host='0.0.0.0', port=6006, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=81, workers=1)
