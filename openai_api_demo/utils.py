@@ -137,7 +137,7 @@ def generate_stream_chatglm3(model: PreTrainedModel, tokenizer: PreTrainedTokeni
     ]
 
     gen_kwargs = {
-        "max_new_tokens": max_new_tokens,
+        #"max_new_tokens": max_new_tokens,
         "max_length": max_length,
         "do_sample": True if temperature > 1e-5 else False,
         "top_p": top_p,
