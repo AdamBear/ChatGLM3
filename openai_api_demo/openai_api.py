@@ -32,8 +32,8 @@ async def check_api_key(
 ):
     global API_KEYS
     if API_KEYS is not None:
-        API_KEYS = API_KEYS.split(",")
-        if auth is None or (token := auth.credentials) not in API_KEYS:
+        key_list = API_KEYS.split(",")
+        if auth is None or (token := auth.credentials) not in key_list:
             raise HTTPException(
                 status_code=401,
                 detail={
@@ -146,7 +146,7 @@ async def list_models():
     return ModelList(data=[model_card])
 
 
-@app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
+@app.post("/v1/chat/completions", response_model=ChatCompletionResponse, dependencies=[Depends(check_api_key)])
 async def create_chat_completion(request: ChatCompletionRequest):
     global model, tokenizer
 
@@ -260,7 +260,7 @@ async def predict(model_id: str, params: dict):
 
 if __name__ == "__main__":
 
-    model_path = "THUDM/chatglm3-6b"
+    model_path = "/data/chatglm3-6b"
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True).cuda()
 
@@ -269,4 +269,4 @@ if __name__ == "__main__":
     # model = load_model_on_gpus("THUDM/chatglm3-6b", num_gpus=2)
     model = model.eval()
 
-    uvicorn.run(app, host='0.0.0.0', port=8000, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=6006, workers=1)
