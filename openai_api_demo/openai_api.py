@@ -3,7 +3,8 @@
 # Usage: python openai_api.py
 # Visit http://localhost:8000/docs for documents.
 
-# 请在当前目录运行
+# 在OpenAI的API中，max_tokens 等价于 HuggingFace 的 max_new_tokens 而不是 max_length，。
+# 例如，对于6b模型，设置max_tokens = 8192，则会报错，因为扣除历史记录和提示词后，模型不能输出那么多的tokens。
 
 import time
 from contextlib import asynccontextmanager
@@ -19,6 +20,35 @@ from sse_starlette.sse import EventSourceResponse
 from transformers import AutoTokenizer, AutoModel
 
 from utils import process_response, generate_chatglm3, generate_stream_chatglm3
+from fastapi import Depends, HTTPException
+from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
+import os
+
+
+API_KEYS = os.environ["API_KEYS"] or None
+
+async def check_api_key(
+    auth: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+):
+    global API_KEYS
+    if API_KEYS is not None:
+        API_KEYS = API_KEYS.split(",")
+        if auth is None or (token := auth.credentials) not in API_KEYS:
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": {
+                        "message": "",
+                        "type": "invalid_request_error",
+                        "param": None,
+                        "code": "invalid_api_key",
+                    }
+                },
+            )
+        return token
+    else:
+        # api_keys not set; allow all
+        return None
 
 
 @asynccontextmanager
@@ -166,8 +196,8 @@ async def create_chat_completion(request: ChatCompletionRequest):
         finish_reason=finish_reason,
     )
 
-    task_usage = UsageInfo.parse_obj(response["usage"])
-    for usage_key, usage_value in task_usage.dict().items():
+    task_usage = UsageInfo.model_validate(response["usage"])
+    for usage_key, usage_value in task_usage.model_dump().items():
         setattr(usage, usage_key, getattr(usage, usage_key) + usage_value)
 
     return ChatCompletionResponse(model=request.model, choices=[choice_data], object="chat.completion", usage=usage)
@@ -182,7 +212,7 @@ async def predict(model_id: str, params: dict):
         finish_reason=None
     )
     chunk = ChatCompletionResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
-    yield "{}".format(chunk.json(exclude_unset=True))
+    yield "{}".format(chunk.model_dump_json(exclude_unset=True))
 
     previous_text = ""
     for new_response in generate_stream_chatglm3(model, tokenizer, params):
@@ -216,7 +246,7 @@ async def predict(model_id: str, params: dict):
             finish_reason=finish_reason
         )
         chunk = ChatCompletionResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
-        yield "{}".format(chunk.json(exclude_unset=True))
+        yield "{}".format(chunk.model_dump_json(exclude_unset=True))
 
     choice_data = ChatCompletionResponseStreamChoice(
         index=0,
@@ -224,13 +254,13 @@ async def predict(model_id: str, params: dict):
         finish_reason="stop"
     )
     chunk = ChatCompletionResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
-    yield "{}".format(chunk.json(exclude_unset=True))
+    yield "{}".format(chunk.model_dump_json(exclude_unset=True))
     yield '[DONE]'
 
 
 if __name__ == "__main__":
 
-    model_path = "/data/chatglm3-6b"
+    model_path = "THUDM/chatglm3-6b"
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True).cuda()
 
@@ -239,4 +269,4 @@ if __name__ == "__main__":
     # model = load_model_on_gpus("THUDM/chatglm3-6b", num_gpus=2)
     model = model.eval()
 
-    uvicorn.run(app, host='0.0.0.0', port=81, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=8000, workers=1)
