@@ -224,7 +224,12 @@ def process_chatglm_messages(messages, functions=None):
                         }
                     )
             else:
-                messages.append(m)
+                messages.append(
+                    {
+                        "role": role,
+                        "content": content
+                    }
+                )
         else:
             messages.append({"role": role, "content": content})
     return messages
