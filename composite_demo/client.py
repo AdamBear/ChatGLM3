@@ -201,9 +201,10 @@ class HFClient(Client):
 class OpenAIClient(Client):
     def __init__(self, model_path: str, tokenizer_path: str, pt_checkpoint: str | None = None, DEVICE='cpu'):
         from openai import OpenAI
+        base_url = os.environ["BASE_URL"]
         api_key = os.environ["API_KEY"]
         self.client = OpenAI(
-                base_url="http://127.0.0.1:82/v1",
+                base_url=base_url,
                 api_key=api_key
         )
         pass
