@@ -38,7 +38,8 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 @st.cache_resource
 def get_client() -> Client:
-    client = HFClient(MODEL_PATH, TOKENIZER_PATH, PT_PATH, DEVICE)
+    #client = HFClient(MODEL_PATH, TOKENIZER_PATH, PT_PATH, DEVICE)
+    client = OpenAIClient(MODEL_PATH, TOKENIZER_PATH, PT_PATH, DEVICE)
     return client
 
 
@@ -50,6 +51,7 @@ class Client(Protocol):
                         **parameters: Any
                         ) -> Iterable[TextGenerationStreamResponse]:
         ...
+
 
 
 def stream_chat(self, tokenizer, query: str, history: list[tuple[str, str]] = None, role: str = "user",
@@ -195,3 +197,43 @@ class HFClient(Client):
                     special=word_stripped.startswith('<|') and word_stripped.endswith('|>'),
                 )
             )
+
+class OpenAIClient(Client):
+    def __init__(self, model_path: str, tokenizer_path: str, pt_checkpoint: str | None = None, DEVICE='cpu'):
+        from openai import OpenAI
+        api_key = os.environ["API_KEY"]
+        self.client = OpenAI(
+                base_url="http://127.0.0.1:82/v1",
+                api_key=api_key
+        )
+        pass
+
+    def generate_stream(self,
+                        system: str | None,
+                        tools: list[dict] | None,
+                        history: list[Conversation],
+                        **parameters: Any
+                        ) -> Iterable[TextGenerationStreamResponse]:
+
+        chat_history = [{
+            'role': 'system',
+            'content': system if not tools else TOOL_PROMPT,
+        }]
+
+        if tools:
+            chat_history[0]['tools'] = tools
+
+        for conversation in history[:-1]:
+            chat_history.append({
+                'role': str(conversation.role).removeprefix('<|').removesuffix('|>'),
+                'content': conversation.content,
+            })
+
+        response = self.client.chat.completions.create(model="chatglm3-6b", messages=chat_history)
+
+        for chunk in response:
+            yield TextGenerationStreamResponse(
+                generated_text=chunk
+            )
+
+
