@@ -234,7 +234,13 @@ class OpenAIClient(Client):
 
         for chunk in response:
             yield TextGenerationStreamResponse(
-                generated_text=chunk
+                generated_text=chunk,
+                token=Token(
+                    id=0,
+                    logprob=0,
+                    text=chunk,
+                    special=False,
+                )
             )
 
 
