@@ -264,7 +264,7 @@ async def predict(model_id: str, params: dict):
 
 if __name__ == "__main__":
 
-    model_path = "/data/chatglm3-6b"
+    model_path = "/data/chatglm3-6b-32k"
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True).cuda()
 

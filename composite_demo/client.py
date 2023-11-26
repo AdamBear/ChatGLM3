@@ -224,23 +224,25 @@ class OpenAIClient(Client):
         if tools:
             chat_history[0]['tools'] = tools
 
-        for conversation in history[:-1]:
+        for conversation in history:
             chat_history.append({
                 'role': str(conversation.role).removeprefix('<|').removesuffix('|>'),
                 'content': conversation.content,
             })
 
-        response = self.client.chat.completions.create(model="chatglm3-6b", messages=chat_history)
+        response = self.client.chat.completions.create(model="chatglm3-6b", messages=chat_history, stream=True)
 
         for chunk in response:
-            yield TextGenerationStreamResponse(
-                generated_text=chunk,
-                token=Token(
-                    id=0,
-                    logprob=0,
-                    text=chunk,
-                    special=False,
+            text = chunk.choices[0].delta.content
+            if text:
+                yield TextGenerationStreamResponse(
+                    generated_text=text,
+                    token=Token(
+                        id=0,
+                        logprob=0,
+                        text=text,
+                        special=False,
+                    )
                 )
-            )
 
 
