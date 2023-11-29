@@ -192,7 +192,6 @@ def generate_stream_chatglm3(model: PreTrainedModel, tokenizer: PreTrainedTokeni
 def process_chatglm_messages(messages, functions=None):
     _messages = messages
     messages = []
-
     if functions:
         messages.append(
             {

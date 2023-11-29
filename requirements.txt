@@ -3,13 +3,10 @@ transformers>=4.30.2
 cpm_kernels
 torch>=2.0
 gradio~=3.39
-mdtex2html
 sentencepiece
 accelerate
 sse-starlette
 streamlit>=1.24.0
-fastapi>=0.95.1
-typing_extensions
-uvicorn
-sse_starlette
-loguru
+fastapi>=0.104.1
+uvicorn~=0.24.0
+loguru~=0.7.2

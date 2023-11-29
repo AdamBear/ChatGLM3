@@ -50,7 +50,7 @@ async def check_api_key(
         # api_keys not set; allow all
         return None
 
-MODEL_PATH = os.environ.get('MODEL_PATH', 'THUDM/chatglm3-6b')
+MODEL_PATH = os.environ.get('MODEL_PATH', '/data/chatglm3-6b')
 TOKENIZER_PATH = os.environ.get("TOKENIZER_PATH", MODEL_PATH)
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -175,14 +175,18 @@ async def create_chat_completion(request: ChatCompletionRequest):
         return EventSourceResponse(generate, media_type="text/event-stream")
 
     response = generate_chatglm3(model, tokenizer, gen_params)
-    usage = UsageInfo()
 
+    # Remove the first newline character
+    if response["text"].startswith("\n"):
+        response["text"] = response["text"][1:]
+    response["text"] = response["text"].strip()
+    usage = UsageInfo()
     function_call, finish_reason = None, "stop"
     if request.functions:
         try:
             function_call = process_response(response["text"], use_tool=True)
         except:
-            logger.warning("Failed to parse tool call")
+            logger.warning("Failed to parse tool call, maybe the response is not a tool call or have been answered.")
 
     if isinstance(function_call, dict):
         finish_reason = "function_call"
@@ -194,16 +198,16 @@ async def create_chat_completion(request: ChatCompletionRequest):
         function_call=function_call if isinstance(function_call, FunctionCallResponse) else None,
     )
 
+    logger.debug(f"==== message ====\n{message}")
+
     choice_data = ChatCompletionResponseChoice(
         index=0,
         message=message,
         finish_reason=finish_reason,
     )
-
     task_usage = UsageInfo.model_validate(response["usage"])
     for usage_key, usage_value in task_usage.model_dump().items():
         setattr(usage, usage_key, getattr(usage, usage_key) + usage_value)
-
     return ChatCompletionResponse(model=request.model, choices=[choice_data], object="chat.completion", usage=usage)
 
 
@@ -233,7 +237,7 @@ async def predict(model_id: str, params: dict):
             try:
                 function_call = process_response(decoded_unicode, use_tool=True)
             except:
-                print("Failed to parse tool call")
+                logger.warning("Failed to parse tool call, maybe the response is not a tool call or have been answered.")
 
         if isinstance(function_call, dict):
             function_call = FunctionCallResponse(**function_call)
