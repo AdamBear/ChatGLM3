@@ -230,7 +230,7 @@ class OpenAIClient(Client):
                 'content': conversation.content,
             })
 
-        response = self.client.chat.completions.create(model="chatglm3-6b", messages=chat_history, stream=True)
+        response = self.client.chat.completions.create(model="chatglm3-6b", messages=chat_history, functions=tools, stream=True)
 
         for chunk in response:
             text = chunk.choices[0].delta.content

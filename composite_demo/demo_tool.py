@@ -117,8 +117,7 @@ def main(top_p: float, temperature: float, prompt_text: str, repetition_penalty:
                 temperature=temperature,
                 top_p=top_p,
                 stop_sequences=[str(r) for r in (Role.USER, Role.OBSERVATION)],
-                repetition_penalty=repetition_penalty,
-                length_penalty=length_penalty,
+                repetition_penalty=repetition_penalty
             ):
                 token = response.token
                 if response.token.special:
