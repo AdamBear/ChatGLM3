@@ -230,6 +230,11 @@ def process_chatglm_messages(messages, functions=None):
                     }
                 )
         else:
+            if "<|assistant|>" in content:
+                content = content.split("<|assistant|>", maxsplit=1)[0]
+            if "<|user|>" in content:
+                content = content.split("<|user|>", maxsplit=1)[0]
+
             messages.append({"role": role, "content": content})
     return messages
 

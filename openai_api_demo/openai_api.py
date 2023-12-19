@@ -293,12 +293,6 @@ async def get_embeddings(
     # 计算嵌入向量和tokens数量
     embeddings = [embeddings_model.encode(text) for text in request.input]
 
-    # # 如果嵌入向量的维度不为1536，则使用插值法扩展至1536维度
-    # embeddings = [
-    #     expand_features(embedding, 1536) if len(embedding) < 1536 else embedding
-    #     for embedding in embeddings
-    # ]
-
     # Min-Max normalization 归一化
     embeddings = [embedding / np.linalg.norm(embedding) for embedding in embeddings]
 
@@ -324,9 +318,15 @@ async def get_embeddings(
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=6006)
+    args = parser.parse_args()
+
     model_path = "/data/chatglm3-6b"
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True).cuda()
+
     embeddings_model = SentenceTransformer('/data/m3e-base', device='cuda')  # 可设置本地模型
 
     # 多显卡支持，使用下面两行代替上面一行，将num_gpus改为你实际的显卡数量
@@ -334,4 +334,4 @@ if __name__ == "__main__":
     # model = load_model_on_gpus("THUDM/chatglm3-6b", num_gpus=2)
     model = model.eval()
 
-    uvicorn.run(app, host='0.0.0.0', port=6006, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=args.port, workers=1)
